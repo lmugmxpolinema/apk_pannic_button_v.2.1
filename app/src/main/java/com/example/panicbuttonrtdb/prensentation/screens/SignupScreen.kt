@@ -45,6 +45,12 @@ import com.example.panicbuttonrtdb.R
 import com.example.panicbuttonrtdb.prensentation.components.OutlinedTextFieldPassword
 import com.example.panicbuttonrtdb.viewmodel.ViewModel
 import com.example.panicbuttonrtdb.viewmodel.ViewModelFactory
+import com.example.panicbuttonrtdb.data.FirebaseRepository
+import com.example.panicbuttonrtdb.data.Perumahan
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 
 @Composable
 fun SignUpScreen(
@@ -59,6 +65,25 @@ fun SignUpScreen(
     val (password, setPassword) = remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") } // Untuk pesan error
+
+    // Perumahan dropdown
+    val repo = remember { FirebaseRepository() }
+    var perumahanList by remember { mutableStateOf<List<Perumahan>>(emptyList()) }
+    var expanded by remember { mutableStateOf(false) }
+    var selectedName by remember { mutableStateOf("Pilih Perumahan") }
+    var selectedPerumahan by remember { mutableStateOf<Perumahan?>(null) }
+
+    // Load data perumahan
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        repo.fetchPerumahanList(
+            onResult = { list ->
+                perumahanList = list
+            },
+            onError = {
+                // optional handle error
+            }
+        )
+    }
 
     Column(
         modifier
@@ -105,7 +130,71 @@ fun SignUpScreen(
                         fontWeight = FontWeight.Bold,
                         color = colorResource(id = R.color.font)
                     )
-                    Spacer(modifier = Modifier.height(44.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Perumahan label
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Text(
+                            text = "Perumahan",
+                            color = colorResource(id = R.color.font),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(bottom = 6.dp)
+                        )
+                    }
+
+                    // OutlinedTextField DropDown (Fake field)
+                    OutlinedTextField(
+                        value = selectedName,
+                        onValueChange = { },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { expanded = true },
+                        enabled = false,
+                        singleLine = true,
+                        leadingIcon = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_home),
+                                contentDescription = "ic home"
+                            )
+                        },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "dropdown"
+                            )
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = Color.Black,
+                            disabledLeadingIconColor = colorResource(id = R.color.defauld),
+                            disabledTrailingIconColor = colorResource(id = R.color.defauld),
+                            disabledBorderColor = colorResource(id = R.color.defauld),
+                        )
+                    )
+
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        perumahanList.forEach { item ->
+                            DropdownMenuItem(
+                                text = { Text(item.nama) },
+                                onClick = {
+                                    selectedPerumahan = item
+                                    selectedName = item.nama
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     OutlinedTextField(
                         value = name,
                         onValueChange = {name = it},
@@ -166,6 +255,11 @@ fun SignUpScreen(
 
                     Button(
                         onClick = {
+                            if (selectedPerumahan == null) {
+                                Toast.makeText(context, "Pilih perumahan terlebih dahulu", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+
                             if (name.isNotEmpty() && houseNumber.isNotEmpty() && password.isNotEmpty()) {
                                 isLoading = true
                                 errorMessage = ""  // Reset pesan error
@@ -180,7 +274,8 @@ fun SignUpScreen(
                                     onFailure = { error ->
                                         isLoading = false
                                         errorMessage = error  // Tampilkan pesan error
-                                    }
+                                    },
+                                    perumahanId = selectedPerumahan?.id
                                 )
                             } else {
                                 errorMessage = "Semua kolom harus diisi."
@@ -221,4 +316,3 @@ fun SignUpScreen(
         }
     }
 }
-

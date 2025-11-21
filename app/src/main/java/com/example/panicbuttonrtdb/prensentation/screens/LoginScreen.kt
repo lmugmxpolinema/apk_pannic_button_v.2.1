@@ -50,6 +50,16 @@ import com.example.panicbuttonrtdb.R
 import com.example.panicbuttonrtdb.prensentation.components.OutlinedTextFieldPassword
 import com.example.panicbuttonrtdb.viewmodel.ViewModel
 import com.example.panicbuttonrtdb.viewmodel.ViewModelFactory
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.unit.dp
+import com.example.panicbuttonrtdb.data.FirebaseRepository
+import com.example.panicbuttonrtdb.data.Perumahan
+import com.example.panicbuttonrtdb.data.UserPreferences
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 
 @Composable
 fun LoginScreen(
@@ -111,7 +121,92 @@ fun LoginScreen(
                         fontWeight = FontWeight.Bold,
                         color = colorResource(id = R.color.font),
 
+                        )
+
+                    // --- DROPDOWN PERUMAHAN ---
+                    val repo = remember { FirebaseRepository() }
+
+                    var perumahanList by remember { mutableStateOf<List<Perumahan>>(emptyList()) }
+                    var expanded by remember { mutableStateOf(false) }
+                    var selectedName by remember { mutableStateOf("Pilih Perumahan") }
+                    var selectedPerumahan by remember { mutableStateOf<Perumahan?>(null) }
+
+                    // Load data perumahan
+                    LaunchedEffect(Unit) {
+                        repo.fetchPerumahanList(
+                            onResult = { list ->
+                                perumahanList = list
+                            },
+                            onError = {
+                                // optional handle error
+                            }
+                        )
+                    }
+
+                    // Label Perumahan
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Text(
+                            text = "Perumahan",
+                            color = colorResource(id = R.color.font),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(bottom = 6.dp)
+                        )
+                    }
+
+                    // OutlinedTextField DropDown (Fake field)
+                    OutlinedTextField(
+                        value = selectedName,
+                        onValueChange = { },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { expanded = true },
+                        enabled = false,
+                        singleLine = true,
+                        leadingIcon = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_home),
+                                contentDescription = "ic home"
+                            )
+                        },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "dropdown"
+                            )
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = Color.Black,
+                            disabledLeadingIconColor = colorResource(id = R.color.defauld),
+                            disabledTrailingIconColor = colorResource(id = R.color.defauld),
+                            disabledBorderColor = colorResource(id = R.color.defauld),
+                        )
                     )
+
+                    // Dropdown menu
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        perumahanList.forEach { item ->
+                            DropdownMenuItem(
+                                text = { Text(item.nama) },
+                                onClick = {
+                                    selectedPerumahan = item
+                                    selectedName = item.nama
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     Spacer(modifier = Modifier.height(44.dp))
                     OutlinedTextField(
                         value = houseNumber,
@@ -146,17 +241,27 @@ fun LoginScreen(
 
                     Button(
                         onClick = {
+                            if (selectedPerumahan == null) {
+                                Toast.makeText(context, "Pilih perumahan terlebih dahulu", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+
                             if (houseNumber.isNotEmpty() && password.isNotEmpty()) {
+
+                                // Simpan perumahan
+                                UserPreferences(context).savePerumahan(
+                                    selectedPerumahan!!.id,
+                                    selectedPerumahan!!.nama
+                                )
+
                                 isLoading = true
 
                                 viewModel.validateLogin(houseNumber, password) { success, isAdmin ->
                                     isLoading = false
                                     if (success) {
                                         if (isAdmin) {
-                                            // Navigasi ke Dashboard Admin jika login sebagai admin
                                             navController.navigate("dashboard_admin")
                                         } else {
-                                            // Navigasi ke Dashboard User jika login sebagai user biasa
                                             navController.navigate("dashboard")
                                         }
                                     } else {

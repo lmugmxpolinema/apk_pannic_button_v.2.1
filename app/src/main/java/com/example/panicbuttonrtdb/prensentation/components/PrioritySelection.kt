@@ -28,130 +28,113 @@ import com.example.panicbuttonrtdb.R
 @Composable
 fun PriorityButton(
     modifier: Modifier = Modifier,
-    onPrioritySelected: (String) -> Unit
+    onPrioritySelected: (String, String) -> Unit   // priority + level
 ) {
     var selectedPriority by remember { mutableStateOf("Darurat") }
 
+    fun getLevel(priority: String): String {
+        return priority.lowercase()   // contoh: Darurat -> darurat
+    }
+
     Column(
-        modifier
-            .fillMaxWidth()
+        modifier.fillMaxWidth()
     ) {
         Text(
             "Pilih Prioritas",
             color = colorResource(id = R.color.font2),
             modifier = Modifier.padding(bottom = 4.dp, top = 4.dp)
         )
+
         Row(
-            modifier
-                .fillMaxWidth(),
+            modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+
+            // --- DARURAT ---
             if (selectedPriority == "Darurat") {
                 Button(
                     onClick = {
                         selectedPriority = "Darurat"
-                        onPrioritySelected(selectedPriority)
+                        onPrioritySelected("Darurat", getLevel("Darurat"))
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = colorResource(id = R.color.darurat)
-                    ),
+                    colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.darurat)),
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(6.dp),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text(
-                        "Darurat",
-                        color = Color.White,
-                        fontSize = 13.sp
-                    )
+                    Text("Darurat", color = Color.White, fontSize = 13.sp)
                 }
             } else {
                 OutlinedButton(
                     onClick = {
                         selectedPriority = "Darurat"
-                        onPrioritySelected(selectedPriority)
+                        onPrioritySelected("Darurat", getLevel("Darurat"))
                     },
                     border = BorderStroke(1.dp, colorResource(id = R.color.darurat)),
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(6.dp),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text(
-                        "Darurat",
-                        color = colorResource(id = R.color.font3),
-                        fontSize = 13.sp
-                    )
+                    Text("Darurat", color = colorResource(id = R.color.font3), fontSize = 13.sp)
                 }
             }
+
+            // --- PENTING ---
             if (selectedPriority == "Penting") {
                 Button(
                     onClick = {
                         selectedPriority = "Penting"
-                        onPrioritySelected(selectedPriority)
+                        onPrioritySelected("Penting", getLevel("Penting"))
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.penting)),
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(6.dp),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text(
-                        "Penting",
-                        color = Color.White,
-                        fontSize = 13.sp
-                    )
+                    Text("Penting", color = Color.White, fontSize = 13.sp)
                 }
             } else {
                 OutlinedButton(
                     onClick = {
                         selectedPriority = "Penting"
-                        onPrioritySelected(selectedPriority)
+                        onPrioritySelected("Penting", getLevel("Penting"))
                     },
                     border = BorderStroke(1.dp, colorResource(id = R.color.penting)),
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(6.dp),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text(
-                        "Penting",
-                        color = colorResource(id = R.color.font3),
-                        fontSize = 13.sp
-                    )
+                    Text("Penting", color = colorResource(id = R.color.font3), fontSize = 13.sp)
                 }
             }
+
+            // --- BIASA ---
             if (selectedPriority == "Biasa") {
                 Button(
                     onClick = {
                         selectedPriority = "Biasa"
-                        onPrioritySelected(selectedPriority)
+                        onPrioritySelected("Biasa", getLevel("Biasa"))
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.biasa)),
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(6.dp),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text(
-                        "Biasa",
-                        color = Color.White,
-                        fontSize = 13.sp
-                    )
+                    Text("Biasa", color = Color.White, fontSize = 13.sp)
                 }
             } else {
                 OutlinedButton(
                     onClick = {
                         selectedPriority = "Biasa"
-                        onPrioritySelected(selectedPriority)
+                        onPrioritySelected("Biasa", getLevel("Biasa"))
                     },
                     border = BorderStroke(1.dp, colorResource(id = R.color.biasa)),
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(6.dp),
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text(
-                        "Biasa",
-                        color = colorResource(id = R.color.font3),
-                        fontSize = 13.sp
-                    )
+                    Text("Biasa", color = colorResource(id = R.color.font3), fontSize = 13.sp)
                 }
             }
         }

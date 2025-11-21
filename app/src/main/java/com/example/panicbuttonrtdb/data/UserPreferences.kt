@@ -11,6 +11,14 @@ class UserPreferences(context: Context) {
         prefs.edit().putBoolean("is_logged_in", isLoggedIn).apply()
     }
 
+    // Save selected perumahan id (or name)
+    fun savePerumahan(perumahanId: String, perumahanName: String) {
+        prefs.edit()
+            .putString("perumahan_id", perumahanId)
+            .putString("perumahan_name", perumahanName)
+            .apply()
+    }
+
     // Mengambil status login pengguna
     fun isUserLoggedIn(): Boolean {
         return prefs.getBoolean("is_logged_in", false)
@@ -29,6 +37,9 @@ class UserPreferences(context: Context) {
         return prefs.getString("house_number", "")
     }
 
+    fun getPerumahanId(): String? = prefs.getString("perumahan_id", null)
+    fun getPerumahanName(): String? = prefs.getString("perumahan_name", null)
+
     // Fungsi untuk menghapus data pengguna saat logout
     fun clearUserInfo() {
         prefs.edit()
@@ -36,6 +47,8 @@ class UserPreferences(context: Context) {
             .remove("user_name")
             .remove("house_number")
             .remove("isAdminLoggedIn")
+            .remove("perumahan_id")
+            .remove("perumahan_name")
             .apply()
     }
 

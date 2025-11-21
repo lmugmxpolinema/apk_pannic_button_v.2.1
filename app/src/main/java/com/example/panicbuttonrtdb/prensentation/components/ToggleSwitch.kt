@@ -65,6 +65,7 @@ fun ToggleSwitch(
     var showDialog by remember { mutableStateOf(false) } // State untuk menampilkan dialog
     var pendingToggleState by remember { mutableStateOf(false) } // State untuk menyimpan toggle sementara
     var selectedPriority by remember { mutableStateOf("Darurat") }
+    var selectedLevel by remember { mutableStateOf("Darurat") }
     val buzzerState by viewModel.buzzerState.observeAsState(initial = "Off")
     var message by remember { mutableStateOf("") }
     var showError by remember {mutableStateOf(false)}
@@ -85,10 +86,12 @@ fun ToggleSwitch(
                         latitude = lat,
                         longitude = lon
                     )
-                    viewModel.setBuzzerState("on")
-                    viewModel.updateBuzzerState(
-                        isOn = true,
-                        priority = selectedPriority
+                    val perumahanId = viewModel.getPerumahanId()
+
+                    viewModel.updateAlarmForPerumahan(
+                        perumahanId = perumahanId,
+                        state = "on",
+                        level = selectedLevel.lowercase()
                     )
                     sendNotification(
                         context,
@@ -121,8 +124,12 @@ fun ToggleSwitch(
                     pendingToggleState = true
                     showDialog = true
                 } else {
-                    viewModel.updateBuzzerState(false)
-                    viewModel.setBuzzerState("off")
+                    val perumahanId = viewModel.getPerumahanId()
+                    viewModel.updateAlarmForPerumahan(
+                        perumahanId = perumahanId,
+                        state = "off",
+                        level = "off"
+                    )
                 }
             },
             thumbContent = {
@@ -161,8 +168,19 @@ fun ToggleSwitch(
     if (buzzerState == "on") {
         LaunchedEffect(key1 = buzzerState) {
             delay(30000)
-            viewModel.setBuzzerState("off")
-            viewModel.updateBuzzerState(isOn = false)
+            // Auto-off should update the perumahan path so ESP can react
+            val perumahanId = viewModel.getPerumahanId()
+            if (perumahanId.isNotEmpty()) {
+                viewModel.updateAlarmForPerumahan(
+                    perumahanId = perumahanId,
+                    state = "off",
+                    level = "off"
+                )
+            } else {
+                // Fallback: update global nodes (legacy)
+                viewModel.setBuzzerState("off")
+                viewModel.updateBuzzerState(isOn = false)
+            }
         }
     }
     if (showDialog) {
@@ -189,7 +207,7 @@ fun ToggleSwitch(
                 }
             },
             text = {
-                val quickMessages = listOf("Kebakaran", "Bantuan Medis", "Kerumunan Tidak Wajar", "Hewan Berbahaya", "Tolong Segera Datang")
+                val quickMessages = listOf("Kebakaran", "Bantuan Medis", "Kerumunan Tidak Wajar", "Hewan Berbahaya", "Tolong Segera Datang", "Kemalingan")
                 Column {
                     Text(
                         "Tambahkan Pesan dan Prioritas",
@@ -231,8 +249,9 @@ fun ToggleSwitch(
                         )
                     )
                     PriorityButton(
-                        onPrioritySelected = { priority ->
+                        onPrioritySelected = { priority, level ->
                             selectedPriority = priority
+                            selectedLevel = level    // bikin variable ini di atas
                         }
                     )
                     if (showError) {
