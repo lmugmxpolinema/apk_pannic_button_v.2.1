@@ -48,11 +48,11 @@ import com.example.panicbuttonrtdb.viewmodel.ViewModel
 import kotlinx.coroutines.delay
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.layout.ExperimentalLayoutApi // <-- IMPORT BARU
-import androidx.compose.foundation.layout.FlowRow // <-- IMPORT BARU
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import com.example.panicbuttonrtdb.utils.getCurrentLocation // Import fungsi utilitas
+import com.example.panicbuttonrtdb.utils.getCurrentLocation
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -60,25 +60,24 @@ fun ToggleSwitch(
     viewModel: ViewModel,
     context: Context
 ) {
-
-
-    var showDialog by remember { mutableStateOf(false) } // State untuk menampilkan dialog
-    var pendingToggleState by remember { mutableStateOf(false) } // State untuk menyimpan toggle sementara
-    var selectedPriority by remember { mutableStateOf("Darurat") }
-    var selectedLevel by remember { mutableStateOf("Darurat") }
-    val buzzerState by viewModel.buzzerState.observeAsState(initial = "Off")
+    var showDialog by remember { mutableStateOf(false) }
+    var pendingToggleState by remember { mutableStateOf(false) }
+    var selectedPriority by remember { mutableStateOf("") }
+    // FIX: selectedLevel HARUS lowercase untuk ESP8266
+    var selectedLevel by remember { mutableStateOf("") }
+    val buzzerState by viewModel.buzzerState.observeAsState(initial = "off")
     var message by remember { mutableStateOf("") }
-    var showError by remember {mutableStateOf(false)}
+    var showError by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
 
-    // 1. Buat Launcher untuk meminta izin
+    // FIX: Launcher untuk meminta izin lokasi
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
         onResult = { permissions ->
             if (permissions.getOrDefault(android.Manifest.permission.ACCESS_FINE_LOCATION, false)) {
-                // Izin diberikan, panggil fungsi untuk mendapatkan lokasi dan kirim data
                 isLoading = true
                 getCurrentLocation(context) { lat, lon ->
+                    // FIX: Simpan monitor data dengan user dari session aktif
                     viewModel.saveMonitorData(
                         message = message,
                         priority = selectedPriority,
@@ -86,13 +85,16 @@ fun ToggleSwitch(
                         latitude = lat,
                         longitude = lon
                     )
+
                     val perumahanId = viewModel.getPerumahanId()
 
-                    viewModel.updateAlarmForPerumahan(
-                        perumahanId = perumahanId,
-                        state = "on",
+                    // FIX: Gunakan HANYA updateBuzzerState dengan level lowercase
+                    viewModel.updateBuzzerState(
+                        isOn = true,
+                        priority = selectedPriority,
                         level = selectedLevel.lowercase()
                     )
+
                     sendNotification(
                         context,
                         "Panic Button",
@@ -100,14 +102,18 @@ fun ToggleSwitch(
                     )
                     showDialog = false
                     isLoading = false
+
+                    // Reset nilai untuk penggunaan berikutnya
+                    message = ""
+                    selectedPriority = ""
+                    selectedLevel = ""
                 }
             } else {
-                // Izin ditolak, beri tahu user
                 Toast.makeText(context, "Izin lokasi dibutuhkan untuk fitur ini", Toast.LENGTH_SHORT).show()
+                isLoading = false
             }
         }
     )
-
 
     Column(
         modifier = Modifier
@@ -116,20 +122,17 @@ fun ToggleSwitch(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         Switch(
             checked = buzzerState == "on",
             onCheckedChange = { isChecked ->
                 if (isChecked) {
+                    // FIX: ON - tampilkan dialog konfirmasi
                     pendingToggleState = true
                     showDialog = true
                 } else {
-                    val perumahanId = viewModel.getPerumahanId()
-                    viewModel.updateAlarmForPerumahan(
-                        perumahanId = perumahanId,
-                        state = "off",
-                        level = "off"
-                    )
+                    // FIX: OFF - langsung update Firebase dengan state=off dan level=off
+                    viewModel.updateBuzzerState(isOn = false)
+                    Log.d("ToggleSwitch", "Manual OFF: state=off, level=off")
                 }
             },
             thumbContent = {
@@ -137,8 +140,7 @@ fun ToggleSwitch(
                     Icon(
                         painter = painterResource(id = R.drawable.onmode),
                         contentDescription = "on mode",
-                        modifier = Modifier
-                            .padding(5.dp),
+                        modifier = Modifier.padding(5.dp),
                         tint = Color.White
                     )
                 } else {
@@ -165,31 +167,30 @@ fun ToggleSwitch(
                 .padding(20.dp)
         )
     }
+
+    // FIX: Auto-OFF setelah 30 detik menggunakan fungsi OFF yang sama
     if (buzzerState == "on") {
         LaunchedEffect(key1 = buzzerState) {
             delay(30000)
-            // Auto-off should update the perumahan path so ESP can react
-            val perumahanId = viewModel.getPerumahanId()
-            if (perumahanId.isNotEmpty()) {
-                viewModel.updateAlarmForPerumahan(
-                    perumahanId = perumahanId,
-                    state = "off",
-                    level = "off"
-                )
-            } else {
-                // Fallback: update global nodes (legacy)
-                viewModel.setBuzzerState("off")
-                viewModel.updateBuzzerState(isOn = false)
-            }
+            // FIX: Gunakan updateBuzzerState untuk konsistensi
+            viewModel.updateBuzzerState(isOn = false)
+            Log.d("ToggleSwitch", "Auto-OFF 30s: state=off, level=off")
         }
     }
+
     if (showDialog) {
         AlertDialog(
-            onDismissRequest = { showDialog = false },
+            onDismissRequest = {
+                showDialog = false
+                // Reset saat dialog ditutup
+                selectedPriority = ""
+                selectedLevel = ""
+                message = ""
+                showError = false
+            },
             title = {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -207,21 +208,32 @@ fun ToggleSwitch(
                 }
             },
             text = {
-                val quickMessages = listOf("Kebakaran", "Bantuan Medis", "Kerumunan Tidak Wajar", "Hewan Berbahaya", "Tolong Segera Datang", "Kemalingan")
+                val quickMessages = listOf(
+                    "Kebakaran",
+                    "Bantuan Medis",
+                    "Kerumunan Tidak Wajar",
+                    "Hewan Berbahaya",
+                    "Tolong Segera Datang",
+                    "Kemalingan"
+                )
                 Column {
                     Text(
                         "Tambahkan Pesan dan Prioritas",
                         color = colorResource(id = R.color.font2)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Spacer(modifier = Modifier.height(16.dp)) // <-- BARU
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    Text("Quick Massage:", fontSize = 12.sp, color = colorResource(id = R.color.font2)) // <-- BARU
-                    Spacer(modifier = Modifier.height(4.dp)) // <-- BARU
+                    Text(
+                        "Quick Massage:",
+                        fontSize = 12.sp,
+                        color = colorResource(id = R.color.font2)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp), // Jarak antar tombol
-                        verticalArrangement = Arrangement.spacedBy(4.dp)   // Jarak jika ada baris baru
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         quickMessages.forEach { quickMsg ->
                             Button(
@@ -232,7 +244,11 @@ fun ToggleSwitch(
                                 ),
                                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                             ) {
-                                Text(text = quickMsg, fontSize = 11.sp, color = colorResource(id = R.color.font2))
+                                Text(
+                                    text = quickMsg,
+                                    fontSize = 11.sp,
+                                    color = colorResource(id = R.color.font2)
+                                )
                             }
                         }
                     }
@@ -240,20 +256,35 @@ fun ToggleSwitch(
                     OutlinedTextField(
                         value = message,
                         onValueChange = { message = it },
-                        label = { Text(text = "Tambahkan Pesan", color = colorResource(id = R.color.font2)) },
-                        placeholder = { Text( "Opsional", color = colorResource(id = R.color.font3)) },
+                        label = {
+                            Text(
+                                text = "Tambahkan Pesan",
+                                color = colorResource(id = R.color.font2)
+                            )
+                        },
+                        placeholder = {
+                            Text(
+                                "Opsional",
+                                color = colorResource(id = R.color.font3)
+                            )
+                        },
                         colors = TextFieldDefaults.outlinedTextFieldColors(
                             focusedBorderColor = colorResource(id = R.color.font),
                             focusedLabelColor = colorResource(id = R.color.font),
                             cursorColor = colorResource(id = R.color.font)
                         )
                     )
+
+                    // FIX: PriorityButton harus mengembalikan level lowercase
                     PriorityButton(
                         onPrioritySelected = { priority, level ->
                             selectedPriority = priority
-                            selectedLevel = level    // bikin variable ini di atas
+                            // FIX: Pastikan level lowercase untuk ESP8266
+                            selectedLevel = level.lowercase()
+                            showError = false
                         }
                     )
+
                     if (showError) {
                         Text(
                             text = "Silahkan pilih tombol skala prioritas",
@@ -267,42 +298,51 @@ fun ToggleSwitch(
             containerColor = Color.White,
             confirmButton = {
                 Button(
-                    modifier = Modifier
-                        .width(130.dp),
+                    modifier = Modifier.width(130.dp),
                     onClick = {
-                        if (selectedPriority.isEmpty()) {
+                        if (selectedPriority.isEmpty() || selectedLevel.isEmpty()) {
                             showError = true
                         } else {
                             showError = false
                             val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                            vibrator.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE))
+                            vibrator.vibrate(
+                                VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE)
+                            )
 
-                            // Cukup panggil launcher untuk meminta izin.
-                            // Sisanya akan diurus oleh onResult dari launcher.
-                            locationPermissionLauncher.launch(arrayOf(
-                                android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                android.Manifest.permission.ACCESS_COARSE_LOCATION
-                            ))
+                            // FIX: Request permission, proses di callback
+                            locationPermissionLauncher.launch(
+                                arrayOf(
+                                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                                )
+                            )
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = colorResource(id = R.color.primary)
-                    )
+                    ),
+                    enabled = !isLoading
                 ) {
                     Text(
-                        "Kirim",
+                        if (isLoading) "Mengirim..." else "Kirim",
                         color = Color.White
                     )
                 }
             },
             dismissButton = {
                 Button(
-                    modifier = Modifier
-                        .width(130.dp),
-                    onClick = { showDialog = false },
+                    modifier = Modifier.width(130.dp),
+                    onClick = {
+                        showDialog = false
+                        selectedPriority = ""
+                        selectedLevel = ""
+                        message = ""
+                        showError = false
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = colorResource(id = R.color.background_button)
-                    )
+                    ),
+                    enabled = !isLoading
                 ) {
                     Text(
                         "Batal",

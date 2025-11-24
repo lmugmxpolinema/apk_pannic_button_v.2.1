@@ -30,10 +30,12 @@ fun PriorityButton(
     modifier: Modifier = Modifier,
     onPrioritySelected: (String, String) -> Unit   // priority + level
 ) {
-    var selectedPriority by remember { mutableStateOf("Darurat") }
+    // FIX: Tidak ada default selection, user HARUS memilih
+    var selectedPriority by remember { mutableStateOf("") }
 
+    // FIX: Level format HARUS lowercase untuk ESP8266: "biasa", "penting", "darurat"
     fun getLevel(priority: String): String {
-        return priority.lowercase()   // contoh: Darurat -> darurat
+        return priority.lowercase()
     }
 
     Column(
@@ -51,12 +53,12 @@ fun PriorityButton(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            // --- DARURAT ---
+            // FIX: DARURAT - level="darurat"
             if (selectedPriority == "Darurat") {
                 Button(
                     onClick = {
                         selectedPriority = "Darurat"
-                        onPrioritySelected("Darurat", getLevel("Darurat"))
+                        onPrioritySelected("Darurat", "darurat")
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.darurat)),
                     modifier = Modifier.weight(1f),
@@ -69,7 +71,7 @@ fun PriorityButton(
                 OutlinedButton(
                     onClick = {
                         selectedPriority = "Darurat"
-                        onPrioritySelected("Darurat", getLevel("Darurat"))
+                        onPrioritySelected("Darurat", "darurat")
                     },
                     border = BorderStroke(1.dp, colorResource(id = R.color.darurat)),
                     modifier = Modifier.weight(1f),
@@ -80,12 +82,12 @@ fun PriorityButton(
                 }
             }
 
-            // --- PENTING ---
+            // FIX: PENTING - level="penting"
             if (selectedPriority == "Penting") {
                 Button(
                     onClick = {
                         selectedPriority = "Penting"
-                        onPrioritySelected("Penting", getLevel("Penting"))
+                        onPrioritySelected("Penting", "penting")
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.penting)),
                     modifier = Modifier.weight(1f),
@@ -98,7 +100,7 @@ fun PriorityButton(
                 OutlinedButton(
                     onClick = {
                         selectedPriority = "Penting"
-                        onPrioritySelected("Penting", getLevel("Penting"))
+                        onPrioritySelected("Penting", "penting")
                     },
                     border = BorderStroke(1.dp, colorResource(id = R.color.penting)),
                     modifier = Modifier.weight(1f),
@@ -109,12 +111,12 @@ fun PriorityButton(
                 }
             }
 
-            // --- BIASA ---
+            // FIX: BIASA - level="biasa"
             if (selectedPriority == "Biasa") {
                 Button(
                     onClick = {
                         selectedPriority = "Biasa"
-                        onPrioritySelected("Biasa", getLevel("Biasa"))
+                        onPrioritySelected("Biasa", "biasa")
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.biasa)),
                     modifier = Modifier.weight(1f),
@@ -127,7 +129,7 @@ fun PriorityButton(
                 OutlinedButton(
                     onClick = {
                         selectedPriority = "Biasa"
-                        onPrioritySelected("Biasa", getLevel("Biasa"))
+                        onPrioritySelected("Biasa", "biasa")
                     },
                     border = BorderStroke(1.dp, colorResource(id = R.color.biasa)),
                     modifier = Modifier.weight(1f),
