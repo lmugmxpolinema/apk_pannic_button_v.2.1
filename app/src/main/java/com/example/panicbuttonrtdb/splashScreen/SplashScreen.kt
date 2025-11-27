@@ -78,7 +78,7 @@ fun Splash(
             contentAlignment = Alignment.BottomCenter
         ) {
             Text(
-                text = "Versi 1.2",
+                text = "Versi 2.1",
                 fontSize = 12.sp,
                 color = Color.Gray
             )

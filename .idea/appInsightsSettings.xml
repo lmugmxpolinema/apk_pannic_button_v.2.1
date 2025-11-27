@@ -9,9 +9,9 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.example.panicbuttonrtdb" />
-                  <option name="mobileSdkAppId" value="1:608844512131:android:7c1b38e9dc0de6d73b54b6" />
-                  <option name="projectId" value="panicbuttonrtdb" />
-                  <option name="projectNumber" value="608844512131" />
+                  <option name="mobileSdkAppId" value="1:415344446237:android:c03223bc528a9b616e2ff4" />
+                  <option name="projectId" value="panicbuttonrtdb-eccd1" />
+                  <option name="projectNumber" value="415344446237" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

@@ -132,64 +132,55 @@ fun SignUpScreen(
                     )
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Perumahan label
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        Text(
-                            text = "Perumahan",
-                            color = colorResource(id = R.color.font),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(bottom = 6.dp)
-                        )
-                    }
-
                     // OutlinedTextField DropDown (Fake field)
-                    OutlinedTextField(
-                        value = selectedName,
-                        onValueChange = { },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { expanded = true },
-                        enabled = false,
-                        singleLine = true,
-                        leadingIcon = {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_home),
-                                contentDescription = "ic home"
-                            )
-                        },
-                        trailingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = "dropdown"
-                            )
-                        },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = Color.Black,
-                            disabledLeadingIconColor = colorResource(id = R.color.defauld),
-                            disabledTrailingIconColor = colorResource(id = R.color.defauld),
-                            disabledBorderColor = colorResource(id = R.color.defauld),
-                        )
-                    )
+                    Box(modifier = Modifier.fillMaxWidth()) {
 
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        perumahanList.forEach { item ->
-                            DropdownMenuItem(
-                                text = { Text(item.nama) },
-                                onClick = {
-                                    selectedPerumahan = item
-                                    selectedName = item.nama
-                                    expanded = false
-                                }
+                        OutlinedTextField(
+                            value = selectedName,
+                            onValueChange = { },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { expanded = true },
+                            enabled = false,
+                            singleLine = true,
+                            leadingIcon = {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_home),
+                                    contentDescription = "ic home"
+                                )
+                            },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = "dropdown"
+                                )
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                disabledTextColor = Color.Black,
+                                disabledLeadingIconColor = colorResource(id = R.color.defauld),
+                                disabledTrailingIconColor = colorResource(id = R.color.defauld),
+                                disabledBorderColor = colorResource(id = R.color.defauld),
                             )
+                        )
+
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White)
+                        ) {
+                            perumahanList.forEach { item ->
+                                DropdownMenuItem(
+                                    text = { Text(item.nama) },
+                                    onClick = {
+                                        selectedPerumahan = item
+                                        selectedName = item.nama
+                                        expanded = false
+                                    }
+                                )
+                            }
                         }
                     }
 

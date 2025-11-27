@@ -13,25 +13,17 @@ class FirebaseRepository {
         onResult: (List<Perumahan>) -> Unit,
         onError: ((Exception) -> Unit)? = null
     ) {
-        dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
+        val daftarRef = FirebaseDatabase.getInstance().getReference("daftar_perumahan")
 
+        daftarRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val list = mutableListOf<Perumahan>()
 
                 for (child in snapshot.children) {
                     val id = child.key ?: ""
+                    val nama = child.getValue(String::class.java) ?: "Tanpa Nama"
 
-                    // Ambil nama dari info/nama
-                    val nama = child.child("info/nama")
-                        .getValue(String::class.java)
-                        ?: "Tanpa Nama"
-
-                    val perum = Perumahan(
-                        id = id,
-                        nama = nama
-                    )
-
-                    list.add(perum)
+                    list.add(Perumahan(id, nama))
                 }
 
                 onResult(list)

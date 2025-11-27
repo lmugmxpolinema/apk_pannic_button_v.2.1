@@ -123,6 +123,8 @@ fun LoginScreen(
 
                         )
 
+                    Spacer(modifier = Modifier.height(44.dp))
+
                     // --- DROPDOWN PERUMAHAN ---
                     val repo = remember { FirebaseRepository() }
 
@@ -143,71 +145,60 @@ fun LoginScreen(
                         )
                     }
 
-                    // Label Perumahan
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        Text(
-                            text = "Perumahan",
-                            color = colorResource(id = R.color.font),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(bottom = 6.dp)
-                        )
-                    }
+// ----------------- OUTLINED TEXT FIELD DROPDOWN -----------------
+                    Box(modifier = Modifier.fillMaxWidth()) {
 
-                    // OutlinedTextField DropDown (Fake field)
-                    OutlinedTextField(
-                        value = selectedName,
-                        onValueChange = { },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { expanded = true },
-                        enabled = false,
-                        singleLine = true,
-                        leadingIcon = {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_home),
-                                contentDescription = "ic home"
+                        OutlinedTextField(
+                            value = selectedName,
+                            onValueChange = { },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { expanded = true },
+                            enabled = false,
+                            singleLine = true,
+                            leadingIcon = {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_home),
+                                    contentDescription = "ic home"
+                                )
+                            },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = "dropdown"
+                                )
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                disabledTextColor = Color.Black,
+                                disabledLeadingIconColor = colorResource(id = R.color.defauld),
+                                disabledTrailingIconColor = colorResource(id = R.color.defauld),
+                                disabledBorderColor = colorResource(id = R.color.defauld),
                             )
-                        },
-                        trailingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = "dropdown"
-                            )
-                        },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = Color.Black,
-                            disabledLeadingIconColor = colorResource(id = R.color.defauld),
-                            disabledTrailingIconColor = colorResource(id = R.color.defauld),
-                            disabledBorderColor = colorResource(id = R.color.defauld),
                         )
-                    )
 
-                    // Dropdown menu
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        perumahanList.forEach { item ->
-                            DropdownMenuItem(
-                                text = { Text(item.nama) },
-                                onClick = {
-                                    selectedPerumahan = item
-                                    selectedName = item.nama
-                                    expanded = false
-                                }
-                            )
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.White)
+                        ) {
+                            perumahanList.forEach { item ->
+                                DropdownMenuItem(
+                                    text = { Text(item.nama) },
+                                    onClick = {
+                                        selectedPerumahan = item
+                                        selectedName = item.nama
+                                        expanded = false
+                                    }
+                                )
+                            }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Spacer(modifier = Modifier.height(44.dp))
                     OutlinedTextField(
                         value = houseNumber,
                         onValueChange = {houseNumber = it},
